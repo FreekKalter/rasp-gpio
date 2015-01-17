@@ -5,23 +5,15 @@ import RPi.GPIO as gpio
 from subprocess import call
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description='"device driver" for the commodore joystick connected to the gpio pins')
-    parser.add_argument('method', choices=['keyboard', 'joystick'])
-    args = parser.parse_args()
-    j = Joystick()
-    if args.method == 'keyboard':
-        j.keyboard()
-    elif args.method == 'joystick':
-        j.joystick()
-
-
 class Joystick():
 
     def __init__(self):
-        call(['modprobe', 'uinput'])
+        try:
+            call(['modprobe', 'uinput'])
+        except Exception as e:
+            print e
         self.buttons = {'up': 22, 'down': 36, 'fire': 32, 'left': 12, 'right': 18}
+        gpio.setmode(gpio.BOARD)
         gpio.setup(self.buttons.values(), gpio.IN, pull_up_down=gpio.PUD_DOWN)
 
     def joystick(self):
@@ -70,6 +62,7 @@ class Joystick():
             time.sleep(0.1)
 
     def keyboard(self):
+        print 'in keyboard func'
         events = {'up': uinput.KEY_UP,
                   'down': uinput.KEY_DOWN,
                   'left': uinput.KEY_LEFT,
@@ -94,3 +87,19 @@ class Joystick():
                     device.emit_click(events['space'])
                     time.sleep(0.15)
                 time.sleep(0.01)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='"device driver" for the commodore joystick connected to the gpio pins')
+    parser.add_argument('method', choices=['keyboard', 'joystick'])
+    args = parser.parse_args()
+    j = Joystick()
+    if args.method == 'keyboard':
+        j.keyboard()
+    elif args.method == 'joystick':
+        j.joystick()
+
+
+if __name__ == '__main__':
+    main()
